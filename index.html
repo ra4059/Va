@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Will you be my Valentine?</title>
+
+  <!-- Confetti library (lightweight) -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <style>
+    :root { --yesScale: 1; }
+
+    body{
+      margin:0;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(circle at top, #ffe6f0, #fff);
+      overflow:hidden;
+    }
+
+    /* Floating hearts background */
+    .hearts{
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      overflow:hidden;
+      z-index:0;
+    }
+
+    .heart-float{
+      position:absolute;
+      bottom:-60px;
+      font-size:22px;
+      opacity:.65;
+      animation: floatUp linear infinite;
+      filter: blur(.2px);
+    }
+
+    @keyframes floatUp{
+      from { transform: translateY(0) translateX(0) rotate(0deg); opacity: .0; }
+      10% { opacity: .65; }
+      to { transform: translateY(-120vh) translateX(40px) rotate(18deg); opacity: 0; }
+    }
+
+    /* Card */
+    .card{
+      position:relative;
+      z-index:1;
+      background: rgba(255,255,255,.92);
+      backdrop-filter: blur(8px);
+      padding:28px 22px;
+      border-radius:18px;
+      box-shadow: 0 16px 60px rgba(0,0,0,.16);
+      max-width:440px;
+      width:92%;
+      text-align:center;
+      transform: translateY(10px);
+      animation: popIn .6s ease forwards;
+      border: 1px solid rgba(255,45,85,.18);
+    }
+
+    @keyframes popIn{
+      from { opacity:0; transform: translateY(16px) scale(.98); }
+      to { opacity:1; transform: translateY(0) scale(1); }
+    }
+
+    .badge{
+      display:inline-block;
+      padding:6px 12px;
+      border-radius:999px;
+      font-weight:700;
+      font-size:.9rem;
+      background: rgba(255,45,85,.1);
+      color:#ff2d55;
+      margin-bottom:10px;
+    }
+
+    h1{
+      margin:6px 0 8px;
+      font-size:1.75rem;
+      letter-spacing:.2px;
+    }
+
+    p{
+      margin:0 0 18px;
+      color:#444;
+      line-height:1.45;
+    }
+
+    .buttons{
+      position:relative;
+      display:flex;
+      gap:12px;
+      justify-content:center;
+      align-items:center;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+
+    button{
+      border:0;
+      cursor:pointer;
+      padding:12px 18px;
+      border-radius:14px;
+      font-weight:800;
+      font-size:1rem;
+      transition: transform 160ms ease, box-shadow 160ms ease;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button:active{ transform: scale(.98); }
+
+    #yesBtn{
+      background: linear-gradient(135deg, #ff2d55, #ff5c8a);
+      color:white;
+      transform: scale(var(--yesScale));
+      min-width:120px;
+      box-shadow: 0 12px 28px rgba(255,45,85,.25);
+    }
+
+    #yesBtn:hover{ box-shadow: 0 16px 34px rgba(255,45,85,.32); }
+
+    #noBtn{
+      background:#f1f1f3;
+      color:#333;
+      min-width:120px;
+      box-shadow: 0 10px 22px rgba(0,0,0,.08);
+      position:relative;
+    }
+
+    .hint{
+      font-size:.95rem;
+      color:#666;
+      margin-top:12px;
+      min-height:1.2em;
+    }
+
+    /* Modal */
+    .overlay{
+      position:fixed;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      background: rgba(0,0,0,.48);
+      padding:18px;
+      z-index:10;
+    }
+
+    .modal{
+      background:white;
+      border-radius:18px;
+      padding:22px 18px;
+      max-width:440px;
+      width:100%;
+      text-align:center;
+      box-shadow: 0 20px 70px rgba(0,0,0,.25);
+      animation: modalIn .25s ease forwards;
+    }
+
+    @keyframes modalIn{
+      from { transform: translateY(10px) scale(.98); opacity:0; }
+      to { transform: translateY(0) scale(1); opacity:1; }
+    }
+
+    .modal h2{ margin:0 0 10px; }
+    .modal p{ margin:0 0 14px; }
+
+    .closeBtn{
+      background:#111;
+      color:#fff;
+      border-radius:12px;
+      padding:12px 18px;
+      font-weight:800;
+      width: 160px;
+    }
+
+    .tiny{
+      font-size:.85rem;
+      color:#777;
+      margin-top:12px;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- floating hearts -->
+  <div class="hearts" id="hearts"></div>
+
+  <div class="card">
+    <div class="badge">💌 Secret Message</div>
+    <h1>Will you be my Valentine? 💘</h1>
+    <p>I have a very important question… and you must answer honestly 😌</p>
+
+    <div class="buttons" id="btnArea">
+      <button id="yesBtn">YES 💖</button>
+      <button id="noBtn">NO 🙃</button>
+    </div>
+
+    <div class="hint" id="hint"></div>
+    <div class="tiny">Tip: try pressing “NO” 👀</div>
+  </div>
+
+  <div class="overlay" id="overlay" role="dialog" aria-modal="true">
+    <div class="modal">
+      <h2 id="modalTitle">YAY!!! 💖</h2>
+      <p id="modalText">You just made me the happiest person. Happy Valentine’s! 💐</p>
+      <button id="closeBtn" class="closeBtn">Close</button>
+    </div>
+  </div>
+
+  <!-- Optional music (add song.mp3 next to index.html) -->
+  <audio id="bgMusic" preload="auto">
+    <source src="song.mp3" type="audio/mpeg">
+  </audio>
+
+  <script>
+    const yesBtn = document.getElementById("yesBtn");
+    const noBtn = document.getElementById("noBtn");
+    const overlay = document.getElementById("overlay");
+    const closeBtn = document.getElementById("closeBtn");
+    const hint = document.getElementById("hint");
+    const bgMusic = document.getElementById("bgMusic");
+    const btnArea = document.getElementById("btnArea");
+    const hearts = document.getElementById("hearts");
+
+    let noCount = 0;
+    let yesScale = 1;
+
+    // Create floating hearts
+    const heartEmojis = ["💗","💖","💘","💕","💞"];
+    function spawnHeart(){
+      const h = document.createElement("div");
+      h.className = "heart-float";
+      h.textContent = heartEmojis[Math.floor(Math.random()*heartEmojis.length)];
+      h.style.left = Math.floor(Math.random()*100) + "vw";
+      h.style.fontSize = (16 + Math.random()*22) + "px";
+      h.style.animationDuration = (6 + Math.random()*6) + "s";
+      hearts.appendChild(h);
+      setTimeout(() => h.remove(), 13000);
+    }
+    setInterval(spawnHeart, 350);
+
+    function openModal(title, text){
+      document.getElementById("modalTitle").textContent = title;
+      document.getElementById("modalText").textContent = text;
+      overlay.style.display = "flex";
+    }
+
+    function closeModal(){
+      overlay.style.display = "none";
+    }
+
+    yesBtn.addEventListener("click", () => {
+      // Confetti celebration
+      confetti({ particleCount: 140, spread: 75, origin: { y: 0.65 } });
+      setTimeout(() => confetti({ particleCount: 90, spread: 55, origin: { y: 0.65 } }), 220);
+
+      // Try music (will work after user click; if file missing, harmless)
+      bgMusic.currentTime = 0;
+      const p = bgMusic.play();
+      if (p) p.catch(() => {});
+
+      openModal("YAY!!! 💖", "You just made me the happiest person. Happy Valentine’s! 💐");
+    });
+
+    noBtn.addEventListener("click", () => {
+      noCount += 1;
+
+      // YES grows
+      yesScale = Math.min(yesScale + 0.35, 6);
+      document.documentElement.style.setProperty("--yesScale", yesScale);
+
+      const messages = [
+        "Are you sure? 😳",
+        "Think again… 🤨",
+        "This 'NO' button seems suspicious… 😅",
+        "Ok but the 'YES' is looking very clickable 👀",
+        "You’re making the YES button powerful 💪💖",
+        "At this point… just say YES 😭"
+      ];
+      hint.textContent = messages[(noCount - 1) % messages.length];
+
+      // After a few NO clicks, NO starts dodging inside the button area
+      if (noCount >= 4) {
+        const area = btnArea.getBoundingClientRect();
+        const btn = noBtn.getBoundingClientRect();
+
+        const maxX = Math.max(0, area.width - btn.width);
+        const maxY = Math.max(0, area.height - btn.height);
+
+        const x = Math.floor(Math.random() * (maxX + 1));
+        const y = Math.floor(Math.random() * (maxY + 1));
+
+        noBtn.style.position = "absolute";
+        noBtn.style.left = x + "px";
+        noBtn.style.top = y + "px";
+      }
+    });
+
+    // Extra: make NO dodge on hover after 5 clicks (desktop only)
+    noBtn.addEventListener("mouseover", () => {
+      if (noCount < 5) return;
+      const area = btnArea.getBoundingClientRect();
+      const btn = noBtn.getBoundingClientRect();
+      const maxX = Math.max(0, area.width - btn.width);
+      const maxY = Math.max(0, area.height - btn.height);
+      const x = Math.floor(Math.random() * (maxX + 1));
+      const y = Math.floor(Math.random() * (maxY + 1));
+      noBtn.style.left = x + "px";
+      noBtn.style.top = y + "px";
+    });
+
+    closeBtn.addEventListener("click", closeModal);
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) closeModal();
+    });
+  </script>
+</body>
+</html>
